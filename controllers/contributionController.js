@@ -67,7 +67,6 @@ exports.createContribution = async (req, res) => {
       updatedAt: Date.now()
     }).save().then(
       (contribution) => {
-        console.log('SOCKET');
         // Emit notification to admin
         emitToAdmins('new-contribution', {
           id: contribution.id,
