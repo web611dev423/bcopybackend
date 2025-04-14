@@ -1,8 +1,16 @@
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+// Create the uploads directory if it doesn't exist
+const uploadDir = path.resolve(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now();
@@ -21,4 +29,4 @@ const upload = multer({
   }
 });
 
-module.exports = upload; 
+module.exports = upload;
