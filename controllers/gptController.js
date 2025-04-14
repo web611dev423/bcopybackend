@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const convertCode = async (req, res) => {
-  const { prompt } = req.body;
+  const prompt = req.body;
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
