@@ -46,22 +46,22 @@ require('dotenv').config();
 // Define the allowed origins
 const allowedOrigins = [process.env.ADMIN_PANEL_URL, process.env.FRONTEND_URL];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman)
-    if (!origin) return callback(null, true);
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     // Allow requests with no origin (like mobile apps or Postman)
+//     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      // Origin is allowed
-      callback(null, true);
-    } else {
-      // Origin is not allowed
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // Allow cookies and credentials
-}));
-
+//     if (allowedOrigins.indexOf(origin) !== -1) {
+//       // Origin is allowed
+//       callback(null, true);
+//     } else {
+//       // Origin is not allowed
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   credentials: true, // Allow cookies and credentials
+// }));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
