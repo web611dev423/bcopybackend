@@ -1,4 +1,4 @@
-# Code to Excel Converter Backend
+# BeCopy Backend
 
 This Node.js backend service provides functionality to convert program code to Excel files and handle file uploads.
 
