@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createServer } = require('http');
@@ -43,9 +42,9 @@ const notifyAdmins = (type, data) => {
   //   }
   // });
 };
-
+require('dotenv').config();
 // Define the allowed origins
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:4000'];
+const allowedOrigins = [process.env.ADMIN_PANEL_URL, process.env.FRONTEND_URL];
 
 app.use(cors({
   origin: function (origin, callback) {

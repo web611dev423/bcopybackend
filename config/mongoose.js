@@ -5,9 +5,9 @@ const dbConnect = () => {
   require('dotenv').config();
   const databaseUrl = process.env.DATABASE_URL;
   mongoose.connect(databaseUrl)
-    .then(() => console.log("Database Created Successfully on 27017 port..."))
+    .then(() => console.log("Database Connected Successfully"))
     .catch((error) => {
-      console.log("Database Connection Error...");
+      console.log("Database Connection Error");
       console.error(error.message);
       process.exit(1);
     })
