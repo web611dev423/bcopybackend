@@ -25,4 +25,4 @@ const convertCode = async (req, res) => {
   }
 }
 
-module.exports = convertCode;
+module.exports = { convertCode };
