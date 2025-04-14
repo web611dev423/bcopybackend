@@ -4,10 +4,13 @@ let io;
 require('dotenv').config();
 const initSocket = (httpServer) => {
   io = new Server(httpServer, {
-    cors: {
-      origin: process.env.ADMIN_PANEL_URL, // Your frontend URL
+    cors:
+    {
+      // origin: process.env.ADMIN_PANEL_URL, // Your frontend URL
+      origin: "*",
       methods: ["GET", "POST"],
-      credentials: true,
+      // credentials: true,
+      credentials: false,
     },
   });
 
