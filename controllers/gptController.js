@@ -4,6 +4,7 @@ const { response } = require('express');
 const convertCode = async (req, res) => {
   const prompt = req.body;
   try {
+    require('dotenv').config();
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -21,10 +22,11 @@ const convertCode = async (req, res) => {
     const code = response.data.choices[0].message.content;
     res.status(200).json({ code });
   } catch (err) {
-    console.error(err.response?.data || err.message);
+    const errorData = err.response?.data || err.message || err;
+    console.error('OpenAI API Error:', errorData);
     res.status(500).json({
-      message: error.message || " message ",
-      response: err.response.data || " response",
+      message: 'Something went wrong',
+      error: errorData,
     });
   }
 }
