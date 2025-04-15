@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { response } = require('express');
 
 const convertCode = async (req, res) => {
   const prompt = req.body;
@@ -21,7 +22,10 @@ const convertCode = async (req, res) => {
     res.status(200).json({ code });
   } catch (err) {
     console.error(err.response?.data || err.message);
-    res.status(500).json({ message: 'Something went wrong' });
+    res.status(500).json({
+      message: error.message || " message ",
+      response: err.response.data || " response",
+    });
   }
 }
 
