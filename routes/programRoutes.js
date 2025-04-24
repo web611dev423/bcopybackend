@@ -7,6 +7,8 @@ const {
   update,
   delete: deleteItem,
   copy,
+  view,
+  share,
   acceptProgram,
   rejectProgram,
   fetchStatus
@@ -19,6 +21,9 @@ router.get('/:id', getOne);
 
 router.put('/:id', update);
 router.put('/:id/copy', copy);
+router.put('/:id/view', view);
+router.put('/:id/share', share);
+
 
 router.delete('/:id', deleteItem);
 

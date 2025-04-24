@@ -42,11 +42,12 @@ const recruiterSchema = new mongoose.Schema({
     required: true,
     default: "I am a recruiter of company!"
   },
-  positions: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
+  positions: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "job",
+    },
+  ],
   country: {
     type: String,
     required: true,

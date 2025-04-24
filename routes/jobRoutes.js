@@ -16,11 +16,11 @@ router.post('/new', jobController.createJob);
 // Admin only routes
 // router.use(adminAuth);
 router.put('/:id', jobController.updateJob);
-router.delete('/:id', jobController.deleteJob);
 router.patch('/:id/status', jobController.updateJobStatus);
 
 router.post('/accept', jobController.acceptJob);
 router.post('/reject', jobController.rejectJob);
+router.post('/delete', jobController.deleteJob);
 router.post('/status', jobController.fetchStatus);
 
 module.exports = router; 

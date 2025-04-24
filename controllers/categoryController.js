@@ -22,6 +22,13 @@ exports.create = async (req, res) => {
 exports.getAll = async (req, res) => {
   try {
     const items = await Model.find();
+    if (items.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No items found'
+      });
+    }
+    console.log(items);
     res.status(200).json({
       success: true,
       count: items.length,
