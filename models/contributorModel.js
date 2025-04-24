@@ -22,11 +22,12 @@ const contributorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  contributions: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
+  contributions: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "contribution",
+    },
+  ],
   image: {
     type: String,
     default: "",

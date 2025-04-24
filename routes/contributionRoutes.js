@@ -10,15 +10,15 @@ router.get('/:id', contributionController.getContribution);
 // Protected routes
 // router.use(protect);
 router.post('/new', contributionController.createContribution);
-
+router.get('/:id/savedContributions', contributionController.getSavedContributions);
 // Admin routes
 // router.use(adminAuth);
 router.put('/:id', contributionController.updateContribution);
-router.delete('/:id', contributionController.deleteContribution);
 router.patch('/:id/status', contributionController.updateContributionStatus);
 
 router.post('/accept', contributionController.acceptContribution);
 router.post('/reject', contributionController.rejectContribution);
 router.post('/status', contributionController.fetchStatus);
+router.post('/delete', contributionController.deleteContribution);
 
 module.exports = router; 

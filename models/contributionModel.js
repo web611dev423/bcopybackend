@@ -17,7 +17,7 @@ const contributionSchema = new mongoose.Schema({
   submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Contributor' },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'saved'],
     default: 'pending'
   },
   isVisible: {

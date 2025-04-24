@@ -40,6 +40,14 @@ const programSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  views: {
+    type: Number,
+    default: 0,
+  },
+  shares: {
+    type: Number,
+    default: 0,
+  },
   isActive: {
     type: Boolean,
     default: true,

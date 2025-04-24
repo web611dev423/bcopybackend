@@ -128,7 +128,70 @@ exports.copy = async (req, res) => {
     console.log('copy success');
     res.status(200).json({
       success: true,
-      message: 'Item copied successfully'
+      message: 'Item copied successfully',
+      item: item
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+exports.view = async (req, res) => {
+  try {
+    const item = await Model.findByIdAndUpdate(
+      req.params.id,
+      {
+        $inc: { views: 1 }
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found'
+      });
+    }
+    console.log('view success');
+    res.status(200).json({
+      success: true,
+      message: 'Item viewed successfully',
+      item: item
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+exports.share = async (req, res) => {
+  try {
+    const item = await Model.findByIdAndUpdate(
+      req.params.id,
+      {
+        $inc: { shares: 1 }
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Item not found'
+      });
+    }
+    console.log('share success');
+    res.status(200).json({
+      success: true,
+      message: 'Item shared successfully',
+      item: item
     });
   } catch (error) {
     res.status(400).json({
