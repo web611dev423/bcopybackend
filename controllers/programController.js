@@ -1,6 +1,6 @@
 // Replace "Model" with your actual model name
 const Model = require('../models/programModel');
-
+const getFullCategoryName = require('../utils/getCategoryFullName');
 // Create
 exports.create = async (req, res) => {
   try {
@@ -17,41 +17,30 @@ exports.create = async (req, res) => {
   }
 };
 
-// Read (Get All)
 exports.getAll = async (req, res) => {
   try {
     const items = await Model.find();
-    res.status(200).json({
-      success: true,
-      count: items.length,
-      data: items
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
 
-// Read (Get One)
-exports.getOne = async (req, res) => {
-  try {
-    const item = await Model.findById(req.params.id);
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        message: 'Item not found'
-      });
-    }
+    // Add categoryFullName to each item
+    const itemsWithCategoryFullName = await Promise.all(
+      items.map(async (item) => {
+        const categoryFullName = await getFullCategoryName(item.category); // Assuming `item.category` contains the category ID
+        return {
+          ...item.toObject(), // Convert Mongoose document to plain object
+          categoryFullName, // Add the full category name
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      data: item
+      count: itemsWithCategoryFullName.length,
+      data: itemsWithCategoryFullName,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
