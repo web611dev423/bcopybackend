@@ -17,7 +17,7 @@ const {
 router.post('/', create);
 
 router.get('/', getAll);
-router.get('/:id', getOne);
+// router.get('/:id', getOne);
 
 router.put('/:id', update);
 router.put('/:id/copy', copy);
