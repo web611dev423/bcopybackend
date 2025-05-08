@@ -28,7 +28,7 @@ exports.getAll = async (req, res) => {
         message: 'No items found'
       });
     }
-    console.log(items);
+
     res.status(200).json({
       success: true,
       count: items.length,

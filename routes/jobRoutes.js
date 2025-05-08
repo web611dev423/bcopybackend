@@ -23,4 +23,10 @@ router.post('/reject', jobController.rejectJob);
 router.post('/delete', jobController.deleteJob);
 router.post('/status', jobController.fetchStatus);
 
+router.post('/pin', jobController.pinJob);
+router.post('/unpin', jobController.unPinJob);
+
+router.post('/uprank', jobController.upRankJob);
+router.post('/downrank', jobController.downRankJob);
+
 module.exports = router; 

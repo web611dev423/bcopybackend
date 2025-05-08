@@ -18,7 +18,7 @@ const convertCode = async (req, res) => {
         },
       }
     );
-    console.log(process.env.OPENAI_API_KEY);
+
     const code = response.data.choices[0].message.content;
     res.status(200).json({ code });
   } catch (err) {

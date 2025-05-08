@@ -1,10 +1,9 @@
-// Replace "Model" with your actual model name
-const Model = require('../models/programModel');
+const Program = require('../models/programModel');
 const getFullCategoryName = require('../utils/getCategoryFullName');
 // Create
 exports.create = async (req, res) => {
   try {
-    const newItem = await Model.create(req.body);
+    const newItem = await Program.create(req.body);
     res.status(201).json({
       success: true,
       data: newItem
@@ -19,7 +18,7 @@ exports.create = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const items = await Model.find();
+    const items = await Program.find();
 
     // Add categoryFullName to each item
     const itemsWithCategoryFullName = await Promise.all(
@@ -48,7 +47,7 @@ exports.getAll = async (req, res) => {
 // Update
 exports.update = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Program.findByIdAndUpdate(
       req.params.id,
       req.body,
       {
@@ -77,7 +76,7 @@ exports.update = async (req, res) => {
 // Delete
 exports.delete = async (req, res) => {
   try {
-    const item = await Model.findByIdAndDelete(req.params.id);
+    const item = await Program.findByIdAndDelete(req.params.id);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -98,7 +97,7 @@ exports.delete = async (req, res) => {
 
 exports.copy = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Program.findByIdAndUpdate(
       req.params.id,
       {
         $inc: { copies: 1 }
@@ -114,7 +113,7 @@ exports.copy = async (req, res) => {
         message: 'Item not found'
       });
     }
-    console.log('copy success');
+
     res.status(200).json({
       success: true,
       message: 'Item copied successfully',
@@ -129,7 +128,7 @@ exports.copy = async (req, res) => {
 }
 exports.view = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Program.findByIdAndUpdate(
       req.params.id,
       {
         $inc: { views: 1 }
@@ -145,7 +144,7 @@ exports.view = async (req, res) => {
         message: 'Item not found'
       });
     }
-    console.log('view success');
+
     res.status(200).json({
       success: true,
       message: 'Item viewed successfully',
@@ -160,7 +159,7 @@ exports.view = async (req, res) => {
 }
 exports.share = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Program.findByIdAndUpdate(
       req.params.id,
       {
         $inc: { shares: 1 }
@@ -176,7 +175,7 @@ exports.share = async (req, res) => {
         message: 'Item not found'
       });
     }
-    console.log('share success');
+
     res.status(200).json({
       success: true,
       message: 'Item shared successfully',
@@ -192,7 +191,7 @@ exports.share = async (req, res) => {
 
 exports.acceptProgram = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Program.findByIdAndUpdate(
       req.body.id,
       {
         $set: {
@@ -215,7 +214,6 @@ exports.acceptProgram = async (req, res) => {
       message: 'Item accepted successfully'
     });
   } catch (error) {
-    console.log(error);
     res.status(400).json({
       success: false,
       message: error.message
@@ -225,7 +223,7 @@ exports.acceptProgram = async (req, res) => {
 
 exports.rejectProgram = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Program.findByIdAndUpdate(
       req.body.id,
       {
         $set: {
@@ -256,7 +254,7 @@ exports.rejectProgram = async (req, res) => {
 }
 exports.fetchStatus = async (req, res) => {
   try {
-    const item = await Model.findById(req.body.id);
+    const item = await Program.findById(req.body.id);
     res.status(200).json({
       success: true,
       data: item
@@ -268,3 +266,191 @@ exports.fetchStatus = async (req, res) => {
     });
   }
 }
+
+exports.pinProgram = async (req, res) => {
+  try {
+    const program = await Program.findById(req.body.id);
+
+    if (!program) {
+      return res.status(404).json({
+        success: false,
+        error: 'Program not found',
+      });
+    }
+
+    // Pin the Program and set its featureRank
+    const featureRank = await Program.countDocuments({ isFeatured: true }) + 1;
+    const updatedProgram = await Program.findByIdAndUpdate(
+      req.body.id,
+      {
+        isFeatured: true,
+        featureRank,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Program pinned.',
+      data: [updatedProgram], // Return only the updated Program
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Pin Program Failed',
+      details: error.message,
+    });
+  }
+};
+
+exports.unPinProgram = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const programToUnpin = await Program.findById(id);
+
+    if (!programToUnpin) {
+      return res.status(404).json({
+        success: false,
+        error: 'Program not found',
+      });
+    }
+
+    // Unpin the Program and reset its featureRank
+    const unpinnedProgram = await Program.findByIdAndUpdate(
+      id,
+      {
+        isFeatured: false,
+        featureRank: 0,
+      },
+      { new: true }
+    );
+
+    // Decrease the featureRank of Program below the unpinned Program
+    const affectedPrograms = await Program.find({
+      isFeatured: true,
+      featureRank: { $gt: programToUnpin.featureRank },
+    });
+
+    await Program.updateMany(
+      { isFeatured: true, featureRank: { $gt: programToUnpin.featureRank } },
+      { $inc: { featureRank: -1 } }
+    );
+
+    // Fetch the updated Program
+    const updatedPrograms = await Program.find({
+      _id: { $in: affectedPrograms.map((program) => program._id) },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Program unpinned and ranks updated.',
+      data: [unpinnedProgram, ...updatedPrograms], // Return only the updated programs
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Unpin Program Failed',
+      details: error.message,
+    });
+  }
+};
+
+exports.upRankProgram = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const program = await Program.findById(id);
+
+    if (!program) {
+      return res.status(404).json({
+        success: false,
+        error: 'Program not found',
+      });
+    }
+
+    const currentRank = program.featureRank;
+
+    const programAbove = await Program.findOne({
+      isFeatured: true,
+      featureRank: currentRank - 1,
+    });
+
+    if (programAbove) {
+      // Swap ranks with the program above
+      await Program.findByIdAndUpdate(programAbove._id, { featureRank: currentRank });
+    }
+
+    const updatedProgram = await Program.findByIdAndUpdate(
+      id,
+      { featureRank: currentRank - 1 },
+      { new: true }
+    );
+
+    // Fetch the updated programs
+    const updatedPrograms = await Program.find({
+      _id: { $in: [programAbove?._id, updatedProgram._id] },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Program rank increased.',
+      data: updatedPrograms, // Return only the updated Programs
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Program rank increase failed',
+      details: error.message,
+    });
+  }
+};
+exports.downRankProgram = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const program = await Program.findById(id);
+
+    if (!program) {
+      return res.status(404).json({
+        success: false,
+        error: 'Program not found',
+      });
+    }
+
+    const currentRank = program.featureRank;
+
+    const programBelow = await Program.findOne({
+      isFeatured: true,
+      featureRank: currentRank + 1,
+    });
+
+    if (programBelow) {
+      // Swap ranks with the program below
+      await Program.findByIdAndUpdate(programBelow._id, { featureRank: currentRank });
+    }
+
+    const updatedProgram = await Program.findByIdAndUpdate(
+      id,
+      { featureRank: currentRank + 1 },
+      { new: true }
+    );
+
+    // Fetch the updated programs
+    const updatedPrograms = await Program.find({
+      _id: { $in: [programBelow?._id, updatedProgram._id] },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Program rank decreased.',
+      data: updatedPrograms, // Return only the updated programs
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Program rank decrease failed',
+      details: error.message,
+    });
+  }
+};

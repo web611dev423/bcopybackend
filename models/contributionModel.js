@@ -26,7 +26,17 @@ const contributionSchema = new mongoose.Schema({
   },
   // approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt: Date,
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  isFeatured: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  featureRank: {
+    type: Number,
+    required: true,
+    default: 0
+  },
 });
 
 module.exports = mongoose.model('Contribution', contributionSchema); 

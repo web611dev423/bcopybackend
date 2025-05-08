@@ -44,6 +44,16 @@ const jobSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isFeatured: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  featureRank: {
+    type: Number,
+    required: true,
+    default: 0
+  },
   approvedAt: Date,
   createdAt: { type: Date, default: Date.now }
 });

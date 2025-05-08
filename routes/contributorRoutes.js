@@ -13,4 +13,10 @@ router.post('/', contributorController.createContributor);
 router.put('/:id', contributorController.updateContributor);
 router.delete('/:id', contributorController.deleteContributor);
 
+router.post('/pin', contributorController.pinContributor);
+router.post('/unpin', contributorController.unPinContributor);
+
+router.post('/uprank', contributorController.upRankContributor);
+router.post('/downrank', contributorController.downRankContributor);
+
 module.exports = router; 

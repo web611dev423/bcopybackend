@@ -68,6 +68,16 @@ const recruiterSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  isFeatured: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  featureRank: {
+    type: Number,
+    required: true,
+    default: 0
+  },
 });
 
 module.exports = mongoose.model("Recruiter", recruiterSchema);

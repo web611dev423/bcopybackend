@@ -1,11 +1,10 @@
-// Replace "Model" with your actual model name
-const Model = require('../models/contributorModel');
+const Contributor = require('../models/contributorModel');
 
 // Create
 exports.create = async (req, res) => {
   try {
-    const newItem = await Model.create(req.body);
-    console.log(newItem);
+    const newItem = await Contributor.create(req.body);
+
     res.status(201).json({
       success: true,
       data: newItem
@@ -21,7 +20,7 @@ exports.create = async (req, res) => {
 // Read (Get All)
 exports.getAll = async (req, res) => {
   try {
-    const items = await Model.find();
+    const items = await Contributor.find();
     res.status(200).json({
       success: true,
       count: items.length,
@@ -38,7 +37,7 @@ exports.getAll = async (req, res) => {
 // Read (Get One)
 exports.getOne = async (req, res) => {
   try {
-    const item = await Model.findById(req.params.id);
+    const item = await Contributor.findById(req.params.id);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -60,7 +59,7 @@ exports.getOne = async (req, res) => {
 // Update
 exports.update = async (req, res) => {
   try {
-    const item = await Model.findByIdAndUpdate(
+    const item = await Contributor.findByIdAndUpdate(
       req.params.id,
       req.body,
       {
@@ -89,7 +88,7 @@ exports.update = async (req, res) => {
 // Delete
 exports.delete = async (req, res) => {
   try {
-    const item = await Model.findByIdAndDelete(req.params.id);
+    const item = await Contributor.findByIdAndDelete(req.params.id);
     if (!item) {
       return res.status(404).json({
         success: false,
@@ -108,12 +107,16 @@ exports.delete = async (req, res) => {
   }
 };
 
-const Contributor = require('../models/contributorModel');
+
 
 exports.getAllContributors = async (req, res) => {
   try {
     const contributors = await Contributor.find({ isDeleted: false })
-      .sort('-contributions');
+      .sort({
+        isFeatured: -1, // Sort by isFeatured (true first)
+        featureRank: 1, // Sort by featureRank (ascending) for featured jobs
+        contributions: -1,  // Sort by createdAt (descending) for remaining jobs
+      });
 
     res.status(200).json({
       success: true,
@@ -209,3 +212,192 @@ exports.createContributor = async (req, res) => {
   }
 };
 
+
+exports.pinContributor = async (req, res) => {
+
+  try {
+    const contributor = await Contributor.findById(req.body.id);
+
+    if (!contributor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contributor not found',
+      });
+    }
+
+    // Pin the Contributor and set its featureRank
+    const featureRank = await Contributor.countDocuments({ isFeatured: true }) + 1;
+    const updatedContributor = await Contributor.findByIdAndUpdate(
+      req.body.id,
+      {
+        isFeatured: true,
+        featureRank,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Contributor pinned.',
+      data: [updatedContributor], // Return only the updated Contributor
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Pin Contributor Failed',
+      details: error.message,
+    });
+  }
+};
+
+exports.unPinContributor = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const contributorToUnpin = await Contributor.findById(id);
+
+    if (!contributorToUnpin) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contributor not found',
+      });
+    }
+
+    // Unpin the Contributor and reset its featureRank
+    const unpinnedContributor = await Contributor.findByIdAndUpdate(
+      id,
+      {
+        isFeatured: false,
+        featureRank: 0,
+      },
+      { new: true }
+    );
+
+    // Decrease the featureRank of Contributor below the unpinned Contributor
+    const affectedContributors = await Contributor.find({
+      isFeatured: true,
+      featureRank: { $gt: contributorToUnpin.featureRank },
+    });
+
+    await Contributor.updateMany(
+      { isFeatured: true, featureRank: { $gt: contributorToUnpin.featureRank } },
+      { $inc: { featureRank: -1 } }
+    );
+
+    // Fetch the updated Contributor
+    const updatedContributors = await Contributor.find({
+      _id: { $in: affectedContributors.map((contributor) => contributor._id) },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contributor unpinned and ranks updated.',
+      data: [unpinnedContributor, ...updatedContributors], // Return only the updated contributors
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Unpin Contributor Failed',
+      details: error.message,
+    });
+  }
+};
+
+exports.upRankContributor = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const contributor = await Contributor.findById(id);
+
+    if (!contributor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contributor not found',
+      });
+    }
+
+    const currentRank = contributor.featureRank;
+
+    const contributorAbove = await Contributor.findOne({
+      isFeatured: true,
+      featureRank: currentRank - 1,
+    });
+
+    if (contributorAbove) {
+      // Swap ranks with the contributor above
+      await Contributor.findByIdAndUpdate(contributorAbove._id, { featureRank: currentRank });
+    }
+
+    const updatedContributor = await Contributor.findByIdAndUpdate(
+      id,
+      { featureRank: currentRank - 1 },
+      { new: true }
+    );
+
+    // Fetch the updated contributors
+    const updatedContributors = await Contributor.find({
+      _id: { $in: [contributorAbove?._id, updatedContributor._id] },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contributor rank increased.',
+      data: updatedContributors, // Return only the updated Contributors
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Contributor rank increase failed',
+      details: error.message,
+    });
+  }
+};
+exports.downRankContributor = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const contributor = await Contributor.findById(id);
+
+    if (!contributor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contributor not found',
+      });
+    }
+
+    const currentRank = contributor.featureRank;
+
+    const contributorBelow = await Contributor.findOne({
+      isFeatured: true,
+      featureRank: currentRank + 1,
+    });
+
+    if (contributorBelow) {
+      // Swap ranks with the contributor below
+      await Contributor.findByIdAndUpdate(contributorBelow._id, { featureRank: currentRank });
+    }
+
+    const updatedContributor = await Contributor.findByIdAndUpdate(
+      id,
+      { featureRank: currentRank + 1 },
+      { new: true }
+    );
+
+    // Fetch the updated contributors
+    const updatedContributors = await Contributor.find({
+      _id: { $in: [contributorBelow?._id, updatedContributor._id] },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contributor rank decreased.',
+      data: updatedContributors, // Return only the updated contributors
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Contributor rank decrease failed',
+      details: error.message,
+    });
+  }
+};

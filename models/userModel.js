@@ -43,6 +43,34 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  connected: {
+    type: Boolean,
+    default: false,
+  },
+  socketId: {
+    type: String,
+    default: null,
+  },
+  quizScore: {
+    type: Number,
+    default: 0,
+  },
+  quizHistory: [
+    {
+      quizId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Quiz",
+      },
+      score: {
+        type: Number,
+        default: 0,
+      },
+      dateTaken: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 })
 
 // // Hash password before saving

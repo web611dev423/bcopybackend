@@ -34,7 +34,6 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
-    console.log(user);
     let savedContributions = [];
     if (user.userType === "user") {
       // Find contributor and their saved contributions using aggregation
@@ -71,7 +70,7 @@ exports.login = async (req, res) => {
         savedContributions = contributorWithContributions[0].savedContributions;
       }
     }
-    console.log(user.contry);
+
     res.status(200).json({
       success: true,
       token,
@@ -160,7 +159,7 @@ exports.register = async (req, res) => {
           data: recruiter
         });
       }).catch((error) => {
-        console.log(error);
+
         res.status(500).json({
           success: false,
           error: error.message
@@ -180,7 +179,7 @@ exports.register = async (req, res) => {
           data: contributor
         });
       }).catch((error) => {
-        console.log(error);
+
         res.status(500).json({
           success: false,
           error: error.message
@@ -188,7 +187,7 @@ exports.register = async (req, res) => {
       });
     }
   }).catch((error) => {
-    console.log(error);
+
     res.status(500).json({
       success: false,
       error: error.message
