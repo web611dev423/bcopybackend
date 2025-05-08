@@ -1,33 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const {
-  create,
-  getAll,
-  getOne,
-  update,
-  delete: deleteItem,
-  copy,
-  view,
-  share,
-  acceptProgram,
-  rejectProgram,
-  fetchStatus
-} = require('../controllers/programController');
 
-router.post('/', create);
+const programController = require('../controllers/programController');
 
-router.get('/', getAll);
+router.post('/', programController.create);
+
+router.get('/', programController.getAll);
 // router.get('/:id', getOne);
 
-router.put('/:id', update);
-router.put('/:id/copy', copy);
-router.put('/:id/view', view);
-router.put('/:id/share', share);
+router.put('/:id', programController.update);
+router.put('/:id/copy', programController.copy);
+router.put('/:id/view', programController.view);
+router.put('/:id/share', programController.share);
 
 
-router.delete('/:id', deleteItem);
+// router.delete('/:id', programController.deleteItem);
 
-router.post('/accept', acceptProgram);
-router.post('/reject', rejectProgram);
-router.post('/status', fetchStatus);
+router.post('/accept', programController.acceptProgram);
+router.post('/reject', programController.rejectProgram);
+router.post('/status', programController.fetchStatus);
+
+router.post('/pin', programController.pinProgram);
+router.post('/unpin', programController.unPinProgram);
+
+router.post('/uprank', programController.upRankProgram);
+router.post('/downrank', programController.downRankProgram);
+
 module.exports = router; 

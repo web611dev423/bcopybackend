@@ -2,8 +2,7 @@
 const Contribution = require('../models/contributionModel');
 const Contributor = require('../models/contributorModel');
 const User = require('../models/userModel');
-const mongoose = require('mongoose');
-const { emitToAdmins } = require('../utils/socketManager');
+const { emitToAdmins } = require('../socket/emitSocket');
 
 // Get all contributions (programs)
 exports.getAllContributions = async (req, res) => {
@@ -69,13 +68,13 @@ exports.getSavedContributions = async (req, res) => {
         savedContributions = contributorWithContributions[0].savedContributions;
       }
     }
-    console.log(savedContributions);
+
     res.status(200).json({
       success: true,
       data: savedContributions
     });
   } catch (error) {
-    console.log(error);
+
     res.status(500).json({
       success: false,
       error: error.message
@@ -361,7 +360,7 @@ exports.rejectContribution = async (req, res) => {
 exports.fetchStatus = async (req, res) => {
   try {
     const item = await Contribution.findById(req.body.id);
-    console.log(item);
+
     res.status(200).json({
       success: true,
       data: item
@@ -370,6 +369,196 @@ exports.fetchStatus = async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+
+exports.pinContribution = async (req, res) => {
+
+  try {
+    const contribution = await Contribution.findById(req.body.id);
+
+    if (!contribution) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contribution not found',
+      });
+    }
+
+    // Pin the contribution and set its featureRank
+    const featureRank = await Contribution.countDocuments({ isFeatured: true }) + 1;
+    const updatedContribution = await Contribution.findByIdAndUpdate(
+      req.body.id,
+      {
+        isFeatured: true,
+        featureRank,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Contribution pinned.',
+      data: [updatedContribution], // Return only the updated contribution
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Pin Contribution Failed',
+      details: error.message,
+    });
+  }
+};
+
+exports.unPinContribution = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const contributionToUnpin = await Contribution.findById(id);
+
+    if (!contributionToUnpin) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contribution not found',
+      });
+    }
+
+    // Unpin the contribution and reset its featureRank
+    const unpinnedContribution = await Contribution.findByIdAndUpdate(
+      id,
+      {
+        isFeatured: false,
+        featureRank: 0,
+      },
+      { new: true }
+    );
+
+    // Decrease the featureRank of contributions below the unpinned contribution
+    const affectedContributions = await Contribution.find({
+      isFeatured: true,
+      featureRank: { $gt: contributionToUnpin.featureRank },
+    });
+
+    await Contribution.updateMany(
+      { isFeatured: true, featureRank: { $gt: contributionToUnpin.featureRank } },
+      { $inc: { featureRank: -1 } }
+    );
+
+    // Fetch the updated contributions
+    const updatedContributions = await Contribution.find({
+      _id: { $in: affectedContributions.map((contribution) => contribution._id) },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contribution unpinned and ranks updated.',
+      data: [unpinnedContribution, ...updatedContributions], // Return only the updated contributions
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Unpin Contribution Failed',
+      details: error.message,
+    });
+  }
+};
+
+exports.upRankContribution = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const contribution = await Contribution.findById(id);
+
+    if (!contribution) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contribution not found',
+      });
+    }
+
+    const currentRank = contribution.featureRank;
+
+    const contributionAbove = await Contribution.findOne({
+      isFeatured: true,
+      featureRank: currentRank - 1,
+    });
+
+    if (contributionAbove) {
+      // Swap ranks with the contribution above
+      await Contribution.findByIdAndUpdate(contributionAbove._id, { featureRank: currentRank });
+    }
+
+    const updatedContribution = await Contribution.findByIdAndUpdate(
+      id,
+      { featureRank: currentRank - 1 },
+      { new: true }
+    );
+
+    // Fetch the updated contributions
+    const updatedContributions = await Contribution.find({
+      _id: { $in: [contributionAbove?._id, updatedContribution._id] },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contribution rank increased.',
+      data: updatedContributions, // Return only the updated contributions
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Contribution rank increase failed',
+      details: error.message,
+    });
+  }
+};
+exports.downRankContribution = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const contribution = await Contribution.findById(id);
+
+    if (!contribution) {
+      return res.status(404).json({
+        success: false,
+        error: 'Contribution not found',
+      });
+    }
+
+    const currentRank = contribution.featureRank;
+
+    const contributionBelow = await Contribution.findOne({
+      isFeatured: true,
+      featureRank: currentRank + 1,
+    });
+
+    if (contributionBelow) {
+      // Swap ranks with the contribution below
+      await Contribution.findByIdAndUpdate(contributionBelow._id, { featureRank: currentRank });
+    }
+
+    const updatedContribution = await Contribution.findByIdAndUpdate(
+      id,
+      { featureRank: currentRank + 1 },
+      { new: true }
+    );
+
+    // Fetch the updated contributions
+    const updatedContributions = await Contribution.find({
+      _id: { $in: [contributionBelow?._id, updatedContribution._id] },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contribution rank decreased.',
+      data: updatedContributions, // Return only the updated contributions
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Contribution rank decrease failed',
+      details: error.message,
     });
   }
 };

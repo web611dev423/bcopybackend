@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+require('events').EventEmitter.defaultMaxListeners = 20; // Increase the limit to 20
 
 let io;
 require('dotenv').config();

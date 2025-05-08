@@ -21,4 +21,10 @@ router.post('/reject', contributionController.rejectContribution);
 router.post('/status', contributionController.fetchStatus);
 router.post('/delete', contributionController.deleteContribution);
 
+router.post('/pin', contributionController.pinContribution);
+router.post('/unpin', contributionController.unPinContribution);
+
+router.post('/uprank', contributionController.upRankContribution);
+router.post('/downrank', contributionController.downRankContribution);
+
 module.exports = router; 

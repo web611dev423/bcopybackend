@@ -12,6 +12,7 @@ const authRoutes = require('./authRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const gptRoutes = require('./gptRoutes');
 const dashboardRoutes = require('./dashboardRouter');
+const quizRoutes = require('./quizRoutes');
 // API routes
 router.use('/api/jobs', jobRoutes);
 router.use('/api/contributions', contributionRoutes);
@@ -24,5 +25,6 @@ router.use('/api/auth', authRoutes);
 router.use('/api/upload', uploadRoutes);
 router.use('/api/gpt', gptRoutes);
 router.use('/api/dashboardstring', dashboardRoutes);
+router.use('/api/quiz', quizRoutes);
 
 module.exports = router; 
