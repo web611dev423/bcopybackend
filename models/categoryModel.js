@@ -13,7 +13,7 @@ const categorySchema = new mongoose.Schema({
   parent: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "categories",
-    required: false,
+    default: null
   },
   isActive: {
     type: Boolean,
