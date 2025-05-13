@@ -12,8 +12,8 @@ const fetchTriviaQuestions = async (
   let url = `https://opentdb.com/api.php?amount=${amount}`;
 
   if (category) url += `&category=${category}`;
-  if (difficulty) url += `&difficulty=${difficulty}`;
-  if (type) url += `&type=${type}`;
+  if (difficulty && difficulty != "anyDifficulty") url += `&difficulty=${difficulty}`;
+  if (type && type != "anyType") url += `&type=${type}`;
 
   try {
     const response = await axios.get(url);
@@ -40,7 +40,6 @@ const fetchTriviaQuestions = async (
 
 exports.createQuiz = async (req, res) => {
   const quiz = req.body;
-
   try {
     // Fetch trivia questions
     const questions = await fetchTriviaQuestions(
@@ -60,7 +59,10 @@ exports.createQuiz = async (req, res) => {
     const savedQuiz = await new Quiz(quiz).save();
 
     // Send the response
-    res.status(201).json(savedQuiz);
+    res.status(201).json({
+      message: "Create Quiz Successfully",
+      data: savedQuiz
+    });
   } catch (error) {
     console.error('Error creating quiz:', error);
     res.status(500).json({ error: 'Failed to create quiz' });
@@ -89,11 +91,10 @@ exports.getQuizzes = (req, res) => {
   try {
     const { userId } = req.query;
     if (userId) {
-      Quiz.find({ creatorId: userId }).then((quizzes) => {
+      Quiz.find({ creatorId: userId }).sort({ createdAt: -1 }).then((quizzes) => {
         if (!quizzes || quizzes.length === 0) {
           return res.status(404).json({ error: 'No quizzes found for this user' });
         }
-        console.log(quizzes)
         return res.json({
           message: 'Fetched quizzes successfully',
           data: quizzes
@@ -110,45 +111,6 @@ exports.getQuizzes = (req, res) => {
   }
 };
 
-// // Invitations
-// exports.createInvitation = async (req, res) => {
-//   const invitation = req.body;
-//   invitation.push(invitation);
-//   res.status(201).json(invitation);
-// };
-
-
-
-exports.updateInvitation = (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // const invitation = invitations.find(inv => inv.id === id);
-  // if (invitation) {
-  //   invitation.status = status;
-  //   res.json(invitation);
-
-  //   // Update quiz participants if accepting
-  //   if (status === 'accepted') {
-  //     const quiz = quizzes.find(q => q.id === invitation.quizId);
-  //     if (quiz) {
-  //       if (!quiz.participants) {
-  //         quiz.participants = [];
-  //       }
-  //       if (!quiz.participants.some(p => p.userId === invitation.inviteeId)) {
-  //         quiz.participants.push({
-  //           userId: invitation.inviteeId,
-  //           status: 'accepted'
-  //         });
-  //       }
-  //     }
-  //   }
-  // } else {
-  //   res.status(404).json({ error: 'Invitation not found' });
-  // }
-  res.json({ message: 'Invitation updated successfully' });
-};
-
 exports.getInvitations = async (req, res) => {
   console.log(req.query);
   const { userId } = req.query;
@@ -159,7 +121,7 @@ exports.getInvitations = async (req, res) => {
       participants: {
         $elemMatch: {
           userId: userId,
-          status: { $in: ['pending', 'accepted'] }
+          status: { $in: ['pending', 'accepted', 'completed'] }
         }
       },
     }).lean();
@@ -213,7 +175,11 @@ exports.submitResult = async (req, res) => {
     await quiz.save();
 
     // Respond with the updated participant result
-    res.status(201).json(participant.result);
+    res.status(201).json({
+      message: 'Result submitted successfully',
+      data: quiz,
+    }
+    );
   } catch (error) {
     console.error('Error submitting result:', error);
     res.status(500).json({ error: 'Failed to submit result' });
@@ -242,7 +208,11 @@ exports.getResults = async (req, res) => {
     }
 
     // Respond with the filtered results
-    res.json(results);
+    res.json(
+      {
+        message: "fetch result success",
+        data: results
+      });
   } catch (error) {
     console.error('Error fetching results:', error);
     res.status(500).json({ error: 'Failed to fetch results' });
@@ -252,7 +222,7 @@ exports.getResults = async (req, res) => {
 exports.getQuizScorerList = async (req, res) => {
   try {
 
-    const users = await User.find({}).select('name email _id connected quizScore').lean();
+    const users = await User.find({}).select('name email _id connected quizScore country').lean();
 
     if (!users || users.length === 0) {
       return res.status(404).json({ error: 'No users found' });
